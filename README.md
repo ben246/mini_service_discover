@@ -1,7 +1,7 @@
 # mini_service_discover
 
 1.purpose
-   discover the service in the local area network of ipv4 easily
+discover the service in the local area network of ipv4 easily
    
 2.implementation
    the process uses the udp broadcast to communicate and the protocal consists of a struct head and a json,
