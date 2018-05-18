@@ -13,8 +13,13 @@
 >   client         - example which wants to search some service, golang   
 >   client_c       - like client, C code   
 >   client_android - like client, Android java   
+    
+4.running step
+> 1)daemon
+> 2)server
+> 3)client
      
-4.attention   
+5.attention   
 >   1)turn off your firewall if you don't know edit the related rule   
 >   2)the process will use the only one network to communicate, if it checks the ipv4 and gets failure,   
 >     then it connects to loop addr.      
