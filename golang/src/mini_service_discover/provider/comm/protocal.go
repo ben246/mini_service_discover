@@ -9,7 +9,7 @@ import (
 type ServiceHead struct {
 	Head     uint16
 	Action   ActionType
-	InfoLen  uint16
+	JsonLen  uint16
 	CheckSum uint16
 }
 
@@ -21,6 +21,7 @@ type ServiceInfo struct {
 	ServiceName string `json:"service_name"`
 	IP          string `json:"ip"`
 	Port        uint16 `json:"port"`
+	Info        string `json:"info"`
 }
 
 type ResultInfo struct {
@@ -42,6 +43,8 @@ const (
 	INFO_TYPE_ACTION_FAIL
 
 	INFO_HEAD = 0xFFEE
+
+	INFO_MAX_LEN = 100
 )
 
 type sliceMock struct {
@@ -83,7 +86,7 @@ func PrintData(data []byte) {
 	head := BytesToServiceHead(data)
 	fmt.Println("Head", head.Head)
 	fmt.Println("Action", head.Action)
-	fmt.Println("InfoLen", head.InfoLen)
+	fmt.Println("JsonLen", head.JsonLen)
 	fmt.Println("CheckSum", head.CheckSum)
 
 	fmt.Println(string(data[ServiceHeadLen:]))
@@ -99,7 +102,7 @@ func CheckAndGetServiceInfoHead(data []byte) *ServiceHead {
 		return nil
 	}
 
-	d := data[ServiceHeadLen : ServiceHeadLen+int(h.InfoLen)]
+	d := data[ServiceHeadLen : ServiceHeadLen+int(h.JsonLen)]
 
 	var sum uint16
 	for _, u := range d {
@@ -128,7 +131,7 @@ func GetServiceHead(action ActionType, data []byte) []byte {
 	h := &ServiceHead{
 		Head:    INFO_HEAD,
 		Action:  action,
-		InfoLen: uint16(len(data)),
+		JsonLen: uint16(len(data)),
 	}
 
 	for _, d := range data {
@@ -163,26 +166,36 @@ func GetServiceData(action ActionType, s *ServiceInfo) []byte {
 	}
 }
 
-func GetRegisterService(devName, serviceName, ip string, port uint16) []byte {
+func getValidStr(str string) string {
+	if len(str) > INFO_MAX_LEN {
+		return str[:INFO_MAX_LEN]
+	} else {
+		return str
+	}
+}
+
+func GetRegisterService(devName, serviceName, ip string, port uint16, info string) []byte {
 	s := &ServiceInfo{
-		DeviceName:  devName,
-		ServiceName: serviceName,
-		IP:          ip,
+		DeviceName:  getValidStr(devName),
+		ServiceName: getValidStr(serviceName),
+		IP:          getValidStr(ip),
 		Port:        port,
+		Info:        getValidStr(info),
 	}
 	return GetServiceData(INFO_TYPE_REGISTER_SERVICE, s)
 }
 
-func GetUnRegisterService(devName string) []byte {
+func GetUnRegisterService(devName, serviceName string) []byte {
 	s := &ServiceInfo{
-		DeviceName: devName,
+		DeviceName:  getValidStr(devName),
+		ServiceName: getValidStr(serviceName),
 	}
 	return GetServiceData(INFO_TYPE_UNREGISTER_SERVICE, s)
 }
 
 func GetInquiryService(servieName string) []byte {
 	s := &ServiceInfo{
-		ServiceName: servieName,
+		ServiceName: getValidStr(servieName),
 	}
 	return GetServiceData(INFO_TYPE_INQUIRY, s)
 }
@@ -214,7 +227,7 @@ func GetResultData(action ActionType, s *ResultInfo) []byte {
 
 func GetResult(action ActionType, reason string) []byte {
 	s := &ResultInfo{
-		Reason: reason,
+		Reason: getValidStr(reason),
 	}
 	return GetResultData(action, s)
 }

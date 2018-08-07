@@ -1,0 +1,15 @@
+
+//netstat -apn (tcp & udp)
+//netstat -apnu (udp)
+//netstat -apnu4 (udp4)
+//netstat -apnu6 (udp6)
+//netstat -apnt (tcp)
+//netstat -apnt4 (tcp4)
+//netstat -apnt6 (tcp6)
+
+
+edit Makefile
+
+install cJSON and change the flowing dirs
+
+CJSON_DIR = /study/repository/linux/linux-c/workspace/mini_servie_protocal/cJSON-1.7.6/install

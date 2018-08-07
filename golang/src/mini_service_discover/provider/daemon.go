@@ -1,8 +1,8 @@
-package main
+package provider
 
 import (
 	"fmt"
-	. "mini_service_discover/daemon/provider"
+	. "mini_service_discover/provider/comm"
 )
 
 type DaemonData struct {
@@ -23,13 +23,6 @@ func GetDaemonData() *DaemonData {
 	}
 
 	return d
-}
-
-func main() {
-	d := GetDaemonData()
-	if d != nil {
-		d.Loop()
-	}
 }
 
 func (d *DaemonData) Loop() {
@@ -56,23 +49,28 @@ func (d *DaemonData) ProcessData(data []byte) {
 
 	info := GetServiceInfo(data[ServiceHeadLen:])
 	if info != nil {
+		var err error
 
 		switch head.Action {
 		case INFO_TYPE_REGISTER_SERVICE:
-			fmt.Println("server action:", "register", info.DeviceName, ",", info.ServiceName, ",", info.IP, ",", info.Port)
+			fmt.Println("server action:", "register", info.DeviceName, ",", info.ServiceName, ",", info.IP, ",", info.Port, info.Info)
 			d.provider.AddInfo(info)
 			data := GetResult(INFO_TYPE_ACTION_SUCC, "")
-			d.server.Write(data)
+			_, err = d.server.Write(data)
+			fmt.Println(string(data[ServiceHeadLen:]))
 			break
 		case INFO_TYPE_UNREGISTER_SERVICE:
 			fmt.Println("server action:", "unregister", info.DeviceName, ",", info.ServiceName)
 			if d.provider.RemoveByName(info.DeviceName, info.ServiceName) {
 				data := GetResult(INFO_TYPE_ACTION_SUCC, "")
-				d.server.Write(data)
+				_, err = d.server.Write(data)
+				fmt.Println(string(data[ServiceHeadLen:]))
 			} else {
 				data := GetResult(INFO_TYPE_ACTION_FAIL, SERVICE_NO_FOUND)
-				d.server.Write(data)
+				_, err = d.server.Write(data)
+				fmt.Println(string(data[ServiceHeadLen:]))
 			}
+			break
 		case INFO_TYPE_INQUIRY:
 			fmt.Println("server action:", "inquiry", info.ServiceName)
 			c := d.provider.GetCount(info.ServiceName)
@@ -81,14 +79,18 @@ func (d *DaemonData) ProcessData(data []byte) {
 				d.provider.GetAll(info.ServiceName, res)
 				for _, i := range res {
 					data := GetServiceData(INFO_TYPE_ACTION_SUCC, i)
-					d.server.Write(data)
+					_, err = d.server.Write(data)
 				}
 			} else {
 				data := GetResult(INFO_TYPE_ACTION_FAIL, SERVICE_NO_FOUND)
-				d.server.Write(data)
+				_, err = d.server.Write(data)
 			}
 		default:
 			fmt.Println("GetServiceInfo unknow action", head.Action)
+		}
+
+		if err != nil {
+			fmt.Println(err.Error())
 		}
 	}
 

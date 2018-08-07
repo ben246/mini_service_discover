@@ -1,0 +1,5 @@
+
+2018-8-8
+
+1. adding udp broadcasting medthod by sending data one by one, 
+   since android system will discard all the broadcasting udp data.
